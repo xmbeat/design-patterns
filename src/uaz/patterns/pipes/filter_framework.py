@@ -29,14 +29,14 @@ class FilterFramework(threading.Thread):
                 if self.endOfInputStream():
                     raise EndOfStreamException("End of input stream reached")
                 sleep(0.250)
-        except EndOfStreamException, error:
+        except EndOfStreamException as error:
             raise error
-        except Exception, error:
+        except Exception as error:
             print "{0} Error in read port wait loop::{1}".format(self.getName(), error)
         try:
             data = self.__readPort.read()
             return data
-        except Exception, error:
+        except Exception as error:
             print "{0} Pipe read error::{1}", self.getName(), error
             return 0
     
@@ -44,8 +44,9 @@ class FilterFramework(threading.Thread):
         try:
             self.__writePort.write(data)
             self.__writePort.flush()
-        except Exception, error:
+        except Exception as error:
             print "{0} Pipe write error::{1}".format(self.getName(), error)
+            
             
     def endOfInputStream(self):
         return not self.__inputFilter.isAlive()
@@ -54,7 +55,7 @@ class FilterFramework(threading.Thread):
         try:
             self.__readPort.close()
             self.__writePort.close()
-        except Exception, error:
+        except Exception as error:
             print "{0} closePorts error::{1}".format(self.getName(), error)
                 
 

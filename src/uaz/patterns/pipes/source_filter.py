@@ -14,9 +14,12 @@ class SourceFilter(FilterFramework):
             while (True):
                 data = fileInput.read(1)
                 if data:
-                    bytesRead += 1
+                    bytesRead += 1                    
+                    if bytesWritten == 1023:
+                        pass
                     self.writeByte(data)
                     bytesWritten += 1
+                    #print "SourceBytesWritten:" + str(bytesWritten)
                 else:
                     fileInput.close()
                     self.closePorts()

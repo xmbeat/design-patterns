@@ -18,8 +18,10 @@ class MiddleFilter(FilterFramework):
                 data = self.readByte()
                 read += 1
                 self.writeByte(data)
-                written += 1
+                written += 1                
+                #print "MiddleBytesWritten:" + str(written)
             except EndOfStreamException:
                 self.closePorts()
                 print "{0}::Middle Exiting; bytes read: {1}, bytes written: {2}".format(self.getName(), read, written)
                 break
+                

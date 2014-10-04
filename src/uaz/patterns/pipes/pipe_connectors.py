@@ -55,12 +55,52 @@ class PipedInputStream:
     def connect(self, src):
         src.connect(self)
     
-    def close(self):
-        self.__close_by_reader = True
+    def _receive_(self, b):
         self._cond.acquire()
-        self.__in = -1
-        self._cond.release()
+        #Modificado al original debido a que el lanzar las excepciones, no libera los candados
+        try:
+            self.__check_state__()       
+            self.__write_side = threading.current_thread()
+            
+            if (self.__in == self.__out):
+                self._await_space_()
+                
+            if (self.__in < 0):
+                self.__in = 0
+                self.__out = 0
         
+            self.__buffer[self.__in] = b
+            self.__in += 1
+        
+            if (self.__in >= len(self.__buffer)):
+                self.__in = 0
+                
+        except Exception as error:
+            raise error
+        finally:
+            self._cond.release()
+            
+    def __check_state__(self):
+        if self._connected == False:
+            raise Exception("Pipe not connected")
+        elif self.__close_by_reader or self.__close_by_writer:
+            raise Exception("Pipe closed")
+        elif (self.__read_side is not None) and (not self.__read_side.isAlive()):
+            raise Exception("Read end dead")
+        
+    def _await_space_(self):
+        while self.__in == self.__out:
+            self.__check_state__()
+            # full: kick any waiting readers
+            self._cond.notifyAll()
+            self._cond.wait(1.0)
+        
+    def _received_last_(self):
+        self._cond.acquire()
+        self.__close_by_writer = True
+        self._cond.notify_all()
+        self._cond.release()
+    
     def read(self):
         self._cond.acquire()
         try:
@@ -68,21 +108,22 @@ class PipedInputStream:
                 raise Exception("Pipe not connected")
             elif self.__close_by_reader:
                 raise Exception("Pipe closed")
-            elif self.__write_side is not None and not self.__write_side.isAlive() and not self.__close_by_reader and self.__in < 0:
+            elif self.__write_side is not None and not self.__write_side.isAlive() and not self.__close_by_reader and (self.__in < 0):
                 raise Exception("Write end dead")
+            
             self.__read_side = threading.current_thread()
             trials = 2;
             while self.__in < 0 :
                 if self.__close_by_writer:
                     #closed by writer, return EOF
                     return -1
-                if (self.__write_side is not None and self.__write_side.isAlive()):
+                if (self.__write_side is not None and not self.__write_side.isAlive()):
                     trials -= 1
                     if trials < 0:
                         raise Exception("Pipe broken")            
                 #might be a writer waiting
                 self._cond.notifyAll()
-                self._cond.wait(1000)
+                self._cond.wait(1.0)
             
             ret = self.__buffer[self.__out]
             self.__out += 1
@@ -98,7 +139,7 @@ class PipedInputStream:
             self._cond.release()
             
         return ret;
-       
+    
     def available(self):
         self._cond.acquire()      
         if self.__in < 0:
@@ -112,50 +153,9 @@ class PipedInputStream:
         self._cond.release()
         return aux
     
-    def __check_state__(self):
-        if self._connected == False:
-            raise Exception("Pipe not connected")
-        elif self.__close_by_reader or self.__close_by_writer:
-            raise Exception("Pipe closed")
-        elif (self.__read_side is not None) and (not self.__read_side.isAlive()):
-            raise Exception("Read end dead")
-        
-    def _await_space_(self):
-        while self.__in == self.__out:
-            self.__check_state__()
-            # full: kick any waiting readers
-            self._cond.notifyAll()
-            self._cond.wait(1000)
-    
-    def _receive_(self, b):
+    def close(self):
+        self.__close_by_reader = True
         self._cond.acquire()
-        #Modificado al original debido a que el lanzar las excepciones, no libera los candados
-        try:
-            self.__check_state__()       
-            self.__write_side = threading.current_thread()
-            
-            if (self.__in == self.__out):
-                self._await_space_()
-                
-            if (self.__in < self.__out):
-                self.__in = 0
-                self.__out = 0
-        
-            self.__buffer[self.__in] = b
-            self.__in += 1
-        
-            if (self.__in >= len(self.__buffer)):
-                self.__in = 0
-                
-        except Exception as error:
-            raise error
-        finally:
-            self._cond.release()
-    
-    def _received_last_(self):
-        self._cond.acquire()
-        self.__close_by_writer = True
-        self._cond.notify_all()
+        self.__in = -1
         self._cond.release()
-    
-
+        

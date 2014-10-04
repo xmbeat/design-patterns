@@ -3,7 +3,7 @@ from uaz.patterns.pipes.middle_filter import MiddleFilter
 from uaz.patterns.pipes.sink_filter import SinkFilter
 
 if __name__ == "__main__":
-    filter1 = SourceFilter("msg.txt")
+    filter1 = SourceFilter("FlightData.dat")
     filter2 = MiddleFilter()
     filter3 = SinkFilter()
     
