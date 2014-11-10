@@ -1,6 +1,7 @@
 import datetime
 import struct
-from uaz.patterns.pipes.filter_framework import FilterFramework
+from filter_framework import FilterFramework
+
 
 class SinkFilter(FilterFramework):
     def __init__(self):

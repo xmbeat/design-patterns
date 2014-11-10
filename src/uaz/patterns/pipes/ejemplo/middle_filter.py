@@ -1,4 +1,4 @@
-from uaz.patterns.pipes.filter_framework import FilterFramework, EndOfStreamException
+from filter_framework import FilterFramework, EndOfStreamException
 
 class MiddleFilter(FilterFramework):
     

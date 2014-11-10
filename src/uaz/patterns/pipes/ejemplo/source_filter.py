@@ -1,4 +1,4 @@
-from uaz.patterns.pipes.filter_framework import FilterFramework
+from filter_framework import FilterFramework
 
 class SourceFilter(FilterFramework):
     def __init__(self, filename):
