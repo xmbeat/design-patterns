@@ -1,5 +1,5 @@
 import Pyro4
-from event_package import event_queue
+from event_package.event_queue import EventQueue
 import threading
 
 class EventManager(object):
@@ -70,8 +70,8 @@ class EventManager(object):
             if len(message) > 0:
                 print "Message: {0}".format(message)
                 
-            print "Number of registered participants: {0}".format(self.requestsServiced)
-            print "Number of requests: {0}".format(len(self.container.eventQueueList))
+            print "Number of requests: {0}".format(self.requestsServiced)
+            print "Number of registered participants: {0}".format(len(self.container.eventQueueList))
             print "-------------------------------------------------------------------------------"
             
 if __name__ == "__main__":

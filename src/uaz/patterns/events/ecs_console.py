@@ -1,9 +1,8 @@
 from termio_package.termio import Termio
 import sys
-from uaz.patterns.events.ecs_monitor import ECSMonitor
-from __builtin__ import True
-from gtk import TRUE
+from ecs_monitor import ECSMonitor
 from string import lowercase
+
 
 if __name__ == "__main__":
     userInput = Termio()    # Termio IO Object
@@ -37,7 +36,7 @@ if __name__ == "__main__":
                 print "Using local event manger \n"
             
             print "Set  Range: " + str(tempRangeLow) + "F - " + str(tempRangeHigh) + "F"
-            print "Set Humidity Range: " + humiRangeLow + "% - " + humiRangeHigh + "%\n"
+            print "Set Humidity Range: " + str(humiRangeLow) + "% - " + str(humiRangeHigh) + "%\n"
             print "Select an Option: \n"
             print "1: Set temperature ranges" 
             print "2: Set humidity ranges"
@@ -107,6 +106,7 @@ if __name__ == "__main__":
                         monitor.setHumidityRange(humiRangeLow, humiRangeHigh)
             # === OPTION X ===
             elif lowercase(option) == "x":
+                
                 # Here the user is done, so we set the Done flag and halt
                 # the environmental control system. The monitor provides a method
                 # to do this. Its important to have processes release their queues
