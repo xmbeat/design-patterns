@@ -2,7 +2,10 @@
 class Termio:
     def keyboardReadString(self, prompt = None):
         try:
-            stringItem = raw_input(prompt)
+            if prompt:
+                stringItem = raw_input(prompt)
+            else:
+                stringItem = raw_input()
             return stringItem
         except:
             print "Read Error in Termio.keyboardReadString method"

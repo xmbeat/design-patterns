@@ -29,7 +29,7 @@ class ECSMonitor(threading.Thread):
             on = True       #Used to turn on heaters, chillers, humidifiers, and dehumidifiers
             off = False     #Used to turn off heaters, chillers, humidifiers, and dehumidifiers
             currentTemperature = 0
-            currentHumedity = 0
+            currentHumidity = 0
             self.mw = MessageWindow("ECS Monitoring Console", 0, 0)
             self.ti = Indicator("TEMP UNK", self.mw.getX() + self.mw.getWidth(), 0)
             self.hi = Indicator("HUMI UNK", self.mw.getX() + self.mw.getWidth(), 
@@ -56,12 +56,12 @@ class ECSMonitor(threading.Thread):
                             currentTemperature = float(event.getMessage())
                         except Exception as error:
                             self.mw.writeMessage("Error reading temperature: " + str(error))
-                    elif event.getEventId == 2: #humidity reading
+                    elif event.getEventId() == 2: #humidity reading
                         try:
                             currentHumidity = float(event.getMessage())
                         except Exception as error:
                             self.mw.writeMessage("Error reading humidity: " + str(error))
-                    elif event.getEventId == 99:
+                    elif event.getEventId() == 99:
                         done = True
                         try:
                             self.eventManager.unRegister()
@@ -89,7 +89,7 @@ class ECSMonitor(threading.Thread):
                     self.hi.setLampColorAndMessage("HUMI LOW", 3)
                     self.humidifier(on)
                     self.dehumidifier(off)
-                elif currentHumedity > self.humiRangeHigh:
+                elif currentHumidity > self.humiRangeHigh:
                     self.hi.setLampColorAndMessage("HUMI HIGH", 3)
                     self.humidifier(off)
                     self.dehumidifier(on)

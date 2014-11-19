@@ -10,54 +10,66 @@ class EventManager(object):
     
     def register(self):
         self.cond.acquire()
-        eventQueue = event_queue.EventQueue()
-        self.eventQueueList.append(eventQueue)
-        self.cond.release()
-        return eventQueue.getId()
+        try:
+            eventQueue = EventQueue()
+            self.eventQueueList.append(eventQueue)
+            self.logger.displayStatistics("Register event. Issued ID = " + str(eventQueue.getId()))     
+            return eventQueue.getId()         
+        finally:
+            self.cond.release()
     
     def unRegister(self, queueId):
         self.cond.acquire()
-        found = False
-        i = 0
-        while i < len(self.eventQueueList) and not found :
-            eventQueue = self.eventQueueList[i]
-            if eventQueue.getId() == queueId:
-                self.eventQueueList.pop(i)
-                found = True
-            i += 1
-        
-        if found:
-            self.logger.displayStatistics( "Unregistered ID::" + str(queueId) );
-        else:
-            self.logger.displayStatistics( "Unregister error. ID:" + str(queueId) + " not found.");
-        self.cond.release()
+        try:
+            found = False
+            i = 0
+            while i < len(self.eventQueueList) and not found :
+                eventQueue = self.eventQueueList[i]
+                if eventQueue.getId() == queueId:
+                    self.eventQueueList.pop(i)
+                    found = True
+                i += 1
+            
+            if found:
+                self.logger.displayStatistics( "Unregistered ID::" + str(queueId) );
+            else:
+                self.logger.displayStatistics( "Unregister error. ID:" + str(queueId) + " not found.");
+                
+        finally:
+            self.cond.release()
         
     def sendEvent(self, event):
         self.cond.acquire()
-        for eventQueue in self.eventQueueList:
-            eventQueue.addEvent(event)
-        self.logger.displayStatistics("Incoming event posted from ID: " + str(event.getSenderId()))
-        self.cond.release()
+        try:
+            for eventQueue in self.eventQueueList:
+                eventQueue.addEvent(event)
+            self.logger.displayStatistics("Incoming event posted from ID: " + str(event.getSenderId()))
+            
+        finally:
+            self.cond.release()
         
     def getEventQueue(self, queueId):
         self.cond.acquire()
-        queue = None
-        found = False
-        i = 0
-        while i < len(self.eventQueueList) and not found:
-            eventQueue = self.eventQueueList[i]
-            if eventQueue.getId() == queueId:
-                queue = eventQueue.getCopy()
-                eventQueue.clear()
-                found = True
-            i += 1
-        if found:
-            self.logger.displayStatistics( "Get event queue request from ID: " + str(queueId) + ". Event queue returned.")
-        else:
-            self.logger.displayStatistics( "Get event queue request from ID: " + str(queueId) + ". ID not found.")
+        try:
+            queue = None
+            found = False
+            i = 0
+            while i < len(self.eventQueueList) and not found:
+                eventQueue = self.eventQueueList[i]
+                if eventQueue.getId() == queueId:
+                    queue = eventQueue.getCopy()
+                    eventQueue.clear()
+                    found = True
+                i += 1
+            if found:
+                self.logger.displayStatistics( "Get event queue request from ID: " + str(queueId) + ". Event queue returned.")
+            else:
+                self.logger.displayStatistics( "Get event queue request from ID: " + str(queueId) + ". ID not found.")
+            
+            return queue
+        finally:
+            self.cond.release()
         
-        self.cond.release()
-        return queue
             
     class RequestLogger():
         def __init__(self, container):

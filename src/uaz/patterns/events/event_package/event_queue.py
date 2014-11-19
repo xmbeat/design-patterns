@@ -12,7 +12,7 @@ class EventQueue(object):
         return len(self.eventList)
     
     def addEvent(self, event):
-        self.eventList.append(object, event)
+        self.eventList.append(event)
     
     def getEvent(self):
         event = None

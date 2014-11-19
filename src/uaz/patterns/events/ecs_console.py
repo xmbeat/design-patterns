@@ -1,7 +1,7 @@
 from termio_package.termio import Termio
 import sys
 from ecs_monitor import ECSMonitor
-from string import lowercase
+
 
 
 if __name__ == "__main__":
@@ -30,8 +30,8 @@ if __name__ == "__main__":
             print "\n\n\n"
             print "Environmental Control System (ECS) Command Console:\n"
             
-            if len(sys.argv) > 0:
-                print  "Using event manger at: " + sys.argv[0] + "\n"
+            if len(sys.argv) > 1:
+                print  "Using event manger at: " + sys.argv[1] + "\n"
             else:
                 print "Using local event manger \n"
             
@@ -105,17 +105,17 @@ if __name__ == "__main__":
                     else:
                         monitor.setHumidityRange(humiRangeLow, humiRangeHigh)
             # === OPTION X ===
-            elif lowercase(option) == "x":
+            elif option.lower() == "x":
                 
                 # Here the user is done, so we set the Done flag and halt
                 # the environmental control system. The monitor provides a method
                 # to do this. Its important to have processes release their queues
-                # with the event manager. If these queues are not released these
+                # with the event manager. If these queues are not relsasdeased these
                 # become dead queues and they collect events and will eventually
                 # cause problems for the event manager.
                 monitor.halt()
                 done = True
                 print  "\nConsole Stopped... Exit monitor mindow to return to command prompt."
-                monitor.halt()
+                
     else:
         print "\n\nUnable start the monitor.\n\n"
