@@ -4,6 +4,9 @@ from time import sleep
 from event_package.event_manager_interface import EventManagerInterface
 from instrumentation_package.message_window import MessageWindow
 from instrumentation_package.indicator import Indicator
+from event_package.event import Event
+
+from pycurl import LOW_SPEED_LIMIT
 
 class ECSMonitor(threading.Thread):
     def __init__(self, ipAddress = None):
@@ -81,14 +84,83 @@ class ECSMonitor(threading.Thread):
                     self.ti.setLampColorAndMessage("TEMP OK", 1)
                     self.heater(off)
                     self.chiller(off)
+                    
+                if currentHumidity < self.humiRangeLow:
+                    self.hi.setLampColorAndMessage("HUMI LOW", 3)
+                    self.humidifier(on)
+                    self.dehumidifier(off)
+                elif currentHumedity > self.humiRangeHigh:
+                    self.hi.setLampColorAndMessage("HUMI HIGH", 3)
+                    self.humidifier(off)
+                    self.dehumidifier(on)
+                else:
+                    self.hi.setLampColorAndMessage("HUMI OK", 1)
+                    self.humidifier(off)
+                    self.dehumidifier(off)
                 sleep(delay)
                 
     def isRegistered(self):
         return self.registered
     
     def setTemperatureRange(self, low, high):
-        pass
+        self.tempRangeHigh = high
+        self.tempRangeLow = low
+        self.mw.writeMessage("***Temperature range changed to::" + str(low) + "F - " + str(high) + "F***" )
+        
     
     def setHumidityRange(self, low , high):
-        pass
+        self.humiRangeHigh = high
+        self.humiRangeLow = LOW_SPEED_LIMIT
+        self.mw.writeMessage("***Humidity range changed to::" + str(low) + "% - " + str(high) + "%***" )
+    
+    def halt(self):
+        self.mw.writeMessage("***HALT MESSAGE RECEIVED - SHUTTING DOWN SYSTEM***")
+        event = Event(99, "XXX")
+        try:
+            self.eventManager.sendEvent(event)
+        except Exception as error:
+            print "Error sending halt message:: " + str(error)
+    
+    def heater(self, on):
+        if on:
+            event = Event(5, "H1")
+        else:
+            event = Event(5, "H0")
         
+        try:
+            self.eventManager.sendEvent(event)
+        except Exception as error:
+            print "Error sending heater control message:: " + str(error)
+    
+    def chiller(self, on):
+        if on:
+            event = Event(5, "C1")
+        else:
+            event = Event(5, "C0")
+        
+        try:
+            self.eventManager.sendEvent(event)
+        except Exception as error:
+            print "Error sending chiller control message:: " + str(error)
+            
+    def humidifier(self, on):
+        if on:
+            event = Event(4, "H1")
+        else:
+            event = Event(4, "H0")
+        
+        try:
+            self.eventManager.sendEvent(event)
+        except Exception as error:
+            print "Error sending humidifier control message:: " + str(error)
+            
+    def dehumidifier(self, on):
+        if on:
+            event = Event(4, "D1")
+        else:
+            event = Event(4, "D0")
+            
+        try:
+            self.eventManager.sendEvent(event)
+        except Exception as error:
+            print "Error sending dehumidifier control message::  " + str(error)
