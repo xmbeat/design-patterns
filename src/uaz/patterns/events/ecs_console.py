@@ -41,8 +41,7 @@ if __name__ == "__main__":
             print "1: Set temperature ranges" 
             print "2: Set humidity ranges"
             print "X: Stop System"
-            print "\n >>>>"
-            option = userInput.keyboardReadString()
+            option = userInput.keyboardReadString("\n>>>>")
             
             # === OPTION 1 ===
             if option == "1":

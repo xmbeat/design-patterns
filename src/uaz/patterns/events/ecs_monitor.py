@@ -6,8 +6,6 @@ from instrumentation_package.message_window import MessageWindow
 from instrumentation_package.indicator import Indicator
 from event_package.event import Event
 
-from pycurl import LOW_SPEED_LIMIT
-
 class ECSMonitor(threading.Thread):
     def __init__(self, ipAddress = None):
         threading.Thread.__init__(self)
@@ -33,7 +31,7 @@ class ECSMonitor(threading.Thread):
             self.mw = MessageWindow("ECS Monitoring Console", 0, 0)
             self.ti = Indicator("TEMP UNK", self.mw.getX() + self.mw.getWidth(), 0)
             self.hi = Indicator("HUMI UNK", self.mw.getX() + self.mw.getWidth(), 
-                                self.mw.getHeight() / 2, 2)
+                                int(self.mw.getHeight() / 2), 2)
             self.mw.writeMessage("Registered with the Event Manager")
             try:
                 self.mw.writeMessage("    Participant id: " + str(self.eventManager.getMyId()) )
@@ -110,7 +108,7 @@ class ECSMonitor(threading.Thread):
     
     def setHumidityRange(self, low , high):
         self.humiRangeHigh = high
-        self.humiRangeLow = LOW_SPEED_LIMIT
+        self.humiRangeLow = low
         self.mw.writeMessage("***Humidity range changed to::" + str(low) + "% - " + str(high) + "%***" )
     
     def halt(self):

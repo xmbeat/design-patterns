@@ -12,8 +12,13 @@ class MessageWindow(gui.Frame):
         screenW = self.master.winfo_screenwidth()
         screenH = self.master.winfo_screenheight()        
         windowW = screenW * 0.5
-        windowH = screenH * 0.25       
-       
+        windowH = screenH * 0.25
+          
+        if type(xPos) is float:
+            xPos = int(screenW * xPos)
+        if type(yPos) is float:
+            yPos = int(screenH * yPos)
+            
         self.messageArea = Pmw.ScrolledText(self, borderframe=1,
                                 usehullsize=1,
                                 hull_width=400, hull_height=300,
@@ -23,7 +28,9 @@ class MessageWindow(gui.Frame):
         self.pack(fill=gui.BOTH, expand=1)
         self.master.geometry('%dx%d+%d+%d' % (windowW, windowH, xPos, yPos))        
         self.master.title(title)
-        self.running[0] = True
+        def setRunning():
+            self.running[0] = True
+        self.after_idle(setRunning)
         self.bind("<Destroy>", lambda widget: (self.running.pop(), widget.widget.destroy()))
         self.master.mainloop()
         

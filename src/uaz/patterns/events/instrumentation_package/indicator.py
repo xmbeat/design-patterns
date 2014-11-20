@@ -1,8 +1,6 @@
 import Tkinter as gui
-import Pmw
 import threading
 from time import sleep
-from message_window import MessageWindow
 
 class Indicator(gui.Frame):
     def __init__(self, message, xPos, yPos, initColor = 0):
@@ -20,7 +18,12 @@ class Indicator(gui.Frame):
         else:
             self.height = screenW * 0.1
         
-        self.colors = ("black", "green", "yellow", "red")
+        if type(xPos) is float:
+            xPos = int(screenW * xPos)
+        if type(yPos) is float:
+            yPos = int(screenH * yPos)
+        
+        self.colors = ("gray", "green", "yellow", "red")
         self.iluminationColor = self.colors[initColor]
         self.message = message
         
@@ -28,10 +31,12 @@ class Indicator(gui.Frame):
         self.canvas = gui.Canvas(self)
         self.canvas.pack(fill=gui.BOTH, expand=1)
         self.master.geometry('%dx%d+%d+%d' % (self.height, self.height, xPos, yPos))
-        self.repaint()
         self.master.title("Indicator")
         self.bind("<Destroy>", lambda widget: (self.running.pop(), widget.widget.destroy()))        
-        self.running[0] = True
+        self.repaint()
+        def setRunning():
+            self.running[0] = True
+        self.after_idle(setRunning)
         self.master.mainloop()
         
     def _isAlive(self):
@@ -56,7 +61,7 @@ class Indicator(gui.Frame):
         
     def setLampColorAndMessage(self, message, color):
         if self._isAlive():
-            self.after_idle(Indicator._safeSetLampColorAndMessage, self, message, color)
+            self.after_idle(self._safeSetLampColorAndMessage, message, color)
         else:
             print "Indicator has been destroyed, can't write: " + message + "\n"
     

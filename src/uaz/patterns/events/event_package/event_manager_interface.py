@@ -4,7 +4,7 @@ class ParticipantNotRegisteredException(Exception):
     pass
 
 class EventManagerInterface:
-    def __init__(self, ipAddress = None, port = 1099):
+    def __init__(self, ipAddress = None, port = 1100):
         if ipAddress == None:
             ipAddress = "localhost"
             

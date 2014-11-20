@@ -14,7 +14,9 @@ class EventManager(object):
             eventQueue = EventQueue()
             self.eventQueueList.append(eventQueue)
             self.logger.displayStatistics("Register event. Issued ID = " + str(eventQueue.getId()))     
-            return eventQueue.getId()         
+            return eventQueue.getId()
+        except Exception as error:
+            self.logger.displayStatistics("WARNING::Register::" + str(error))       
         finally:
             self.cond.release()
     
@@ -34,7 +36,8 @@ class EventManager(object):
                 self.logger.displayStatistics( "Unregistered ID::" + str(queueId) );
             else:
                 self.logger.displayStatistics( "Unregister error. ID:" + str(queueId) + " not found.");
-                
+        except Exception as error:
+            self.logger.displayStatistics("WARNING::UnRegister::" + str(error))       
         finally:
             self.cond.release()
         
@@ -44,7 +47,8 @@ class EventManager(object):
             for eventQueue in self.eventQueueList:
                 eventQueue.addEvent(event)
             self.logger.displayStatistics("Incoming event posted from ID: " + str(event.getSenderId()))
-            
+        except Exception as error:
+            self.logger.displayStatistics("WARNING::sendEvent::" + str(error))    
         finally:
             self.cond.release()
         
@@ -67,6 +71,8 @@ class EventManager(object):
                 self.logger.displayStatistics( "Get event queue request from ID: " + str(queueId) + ". ID not found.")
             
             return queue
+        except Exception as error:
+            self.logger.displayStatistics("WARNING::getEventQueue::" + str(error)) 
         finally:
             self.cond.release()
         
@@ -91,7 +97,7 @@ if __name__ == "__main__":
         Pyro4.config.SERIALIZER = 'pickle'
         Pyro4.config.SERIALIZERS_ACCEPTED.add('pickle')
         em = EventManager()
-        daemon = Pyro4.Daemon(None, 1099)
+        daemon = Pyro4.Daemon(None, 1100)
         uri = daemon.register(em, "EventManager")
         print "EventManager Ready on => " + daemon.locationStr
         print "URI => " + str(uri)
