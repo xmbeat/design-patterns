@@ -1,122 +1,131 @@
-import Tkinter as gui
-import threading
+import pygtk
+pygtk.require('2.0')
+import gtk
+from gui import GUI
 from time import sleep
+import math
+import cairo
 
-class Indicator(gui.Frame):
-    def __init__(self, message, xPos, yPos, initColor = 0):
-        self.running = [False]
-        thread = threading.Thread(target=Indicator._safeInit, args=(self, message, xPos, yPos, initColor))
-        thread.start()
-        self._isAlive()
-        
-    def _safeInit(self, message, xPos, yPos, initColor = 0):
-        gui.Frame.__init__(self, gui.Tk())
-        screenW = self.master.winfo_screenwidth()
-        screenH = self.master.winfo_screenheight()
+class Indicator():
+    
+    def __init__(self, message, xPos, yPos, initColor=0):
+        GUI.start()
+        GUI.doOperation(Indicator.createWidgets, self , message, xPos, yPos, initColor)        
+    
+    def createWidgets(self, message, xPos, yPos, initColor):
+        self.win = gtk.Window()
+        GUI.windowCount += 1
+        screen = self.win.get_screen()
+        screenW = screen.get_width()
+        screenH = screen.get_height()
         if screenW > screenH:
-            self.height = screenH * 0.1
+            self.height = int(screenH * 0.1)
         else:
-            self.height = screenW * 0.1
+            self.height = int(screenW * 0.1)
         
         if type(xPos) is float:
             xPos = int(screenW * xPos)
         if type(yPos) is float:
             yPos = int(screenH * yPos)
-        
-        self.colors = ("gray", "green", "yellow", "red")
+        self.colors = ([0.3, 0.3, 0.3], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0], [1.0, 0.0, 0.0])
         self.iluminationColor = self.colors[initColor]
         self.message = message
-        
-        self.pack(fill=gui.BOTH, expand=1)
-        self.canvas = gui.Canvas(self)
-        self.canvas.pack(fill=gui.BOTH, expand=1)
-        self.master.geometry('%dx%d+%d+%d' % (self.height, self.height, xPos, yPos))
-        self.master.title("Indicator")
-        self.bind("<Destroy>", lambda widget: (self.running.pop(), widget.widget.destroy()))        
-        self.repaint()
-        def setRunning():
-            self.running[0] = True
-        self.after_idle(setRunning)
-        self.master.mainloop()
-        
-    def _isAlive(self):
-        if self.running:
-            while self.running[0] == False:
-                sleep(0) #Yield this thread
-            return True
-        return False
+        self.canvas = gtk.DrawingArea()        
+        self.canvas.connect("expose-event", self.onDraw)
+        self.win.add(self.canvas)
+        self.win.set_resizable(False)
+        self.win.set_size_request(self.height, self.height)
+        self.win.show_all()
+        self.win.move(xPos, yPos)
+        self.win.set_title("Indicator")
+        self.win.connect("destroy", GUI.onDestroyWindow)
     
-    def repaint(self):
-        self.canvas.delete("all")
+    
+ 
+    
+    def onDraw(self, widget, event):
+        w = self.win.allocation.width
+        h = self.win.allocation.height
+        context = widget.window.cairo_create()
+        context.set_source_rgb(0, 0, 0)
+        context.set_line_width(2)
+        context.translate(w/2, h/2)
         
-        self.canvas.create_oval(1,1,self.height-2, self.height-2, fill=self.iluminationColor)
+        context.arc(0, 0, h/2, 0, math.pi*2)
+        context.stroke_preserve()
         
-        self.canvas.create_text(self.height / 2.0, self.height / 2, text=self.message)
-      
+        context.set_source_rgb(self.iluminationColor[0], self.iluminationColor[1], self.iluminationColor[2])
+        context.fill_preserve()
         
-    def _safeSetLampColorAndMessage(self, message, color):
-        self.iluminationColor = self.colors[color]
-        self.message = message
-        self.repaint()
-        
+    
+        context.select_font_face("Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+        context.set_font_size(10)
+        textExtents = context.text_extents(self.message)
+        context.move_to(-textExtents[2]/2, textExtents[3]/2)
+        context.set_source_rgb(0, 0, 0)
+        context.show_text(self.message)
+    
     def setLampColorAndMessage(self, message, color):
-        if self._isAlive():
-            self.after_idle(self._safeSetLampColorAndMessage, message, color)
-        else:
-            print "Indicator has been destroyed, can't write: " + message + "\n"
+        def operation():
+            self.message = message
+            self.iluminationColor = self.colors[color]
+            self.canvas.queue_draw()
+        GUI.doOperation(operation)
     
-    def _safeSetLampColor(self, color):
-        self.iluminationColor = self.colors[color]
-        self.repaint()
-     
     def setLampColor(self, color):
-        if self._isAlive():
-            self.after_idle(Indicator._safeSetLampColor, self, color)
-        else:
-            print "Indicator has been destroyed, can't change color\n"
-       
-    
-    def _safeSetMessage(self, message):
-        self.message = message
-        self.repaint()
-    
+        def operation():
+            self.iluminationColor = self.colors[color]
+            self.canvas.queue_draw()
+        GUI.doOperation(operation)
+        
     def setMessage(self, message):
-        if self._isAlive():
-            self.after_idle(Indicator._safeSetMessage, self, message)
-        else:
-            print "Indicator has been destroyed, can't set message: " + message + "\n"
-            
-    def _updateDimensions(self):
-        self.x = self.master.winfo_x()
-        self.y = self.master.winfo_y()
-        self.width = self.master.winfo_width()
-        self.height = self.master.winfo_height()
-        self._isUpdateDimensions = True
-    
-    def _waitForUpdate(self):
-        self._isUpdateDimensions = False
-        self.after_idle(self._updateDimensions)
-        while self._isUpdateDimensions == False:
-            sleep(0)
-    
+        def operation():
+            self.message = message
+            self.canvas.queue_draw()
+        GUI.doOperation(operation)
+        
     def getX(self):
-        self._waitForUpdate()
-        return self.x      
+        self.xPos = None
+        def operation():
+            x, y = self.win.get_position()
+            self.xPos = x
+        GUI.doOperation(operation)
+        while self.xPos is None:
+            sleep(0)
+        return self.xPos
     
     def getY(self):
-        self._waitForUpdate()
-        return self.y
-    
-    def getHeight(self):
-        self._waitForUpdate()
-        return self.height
-    
+        self.yPos = None
+        def operation():
+            x, y = self.win.get_position()
+            self.yPos = y
+        GUI.doOperation(operation)
+        while self.yPos is None:
+            sleep(0)
+        return self.yPos
     
     def getWidth(self):
-        self._waitForUpdate()
+        self.width = None
+        def operation():
+            width, height = self.win.get_size()
+            self.width = width
+        GUI.doOperation(operation)
+        while self.width is None:
+            sleep(0)
         return self.width
     
-    def close(self):
-        self.after_idle(self.master.destroy)
-        
+    def getHeight(self):
+        self.height = None
+        def operation():
+            width, height = self.win.get_size()
+            self.height = height
+        GUI.doOperation(operation)
+        while self.height is None:
+            sleep(0)
+        return self.height
     
+    def close(self):
+        def operation():
+            self.win.destroy()
+        GUI.doOperation(operation)
+        

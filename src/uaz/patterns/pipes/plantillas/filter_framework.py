@@ -56,7 +56,7 @@ class FilterFramework(threading.Thread):
             self.__readPort.close()
             self.__writePort.close()
         except Exception as error:
-            print "{0} closePorts error::{1}".format(self.getName(), error)
+            print "{0} Pipe write error::{1}".format(self.getName(), error)
                 
 
             
